@@ -1,0 +1,100 @@
+<style lang="less">
+  @green: #00E7C1;
+  .settingContainer {
+    height: 100%;
+    .feedback {
+      background-color: transparent;
+      &:after {
+        border-color: @green;
+      }
+    }
+    .footer {
+      position: absolute;
+      left: 0;
+      bottom: 10rpx;
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<template lang="wxml">
+  <div class="settingContainer">
+    <i-row>
+      <i-cell i-class="black-color" title="关于作者" label="勾搭他，加个微信">
+        <button class="feedback" slot="footer" @tap="copyWechat" data-text="migongorg">
+          <i-icon type="interactive" color="#00E7C1" size="20" />
+        </button>
+      </i-cell>
+    </i-row>
+
+    <i-row>
+      <i-cell-group>
+        <i-cell i-class="black-color" title="给赞" label="大爷的打赏，是我活下去的动力。">
+          <button class="feedback" slot="footer" @tap="navigateToMiniProgram">
+            <i-icon type="praise" color="#00E7C1" size="20" />
+          </button>
+        </i-cell>
+        <i-cell i-class="black-color" title="意见反馈" label="回手掏，看不见，走位，走位，哎！难受。">
+          <button class="feedback" slot="footer" open-type="feedback">
+            <i-icon type="brush" color="#00E7C1" size="20" />
+          </button>
+        </i-cell>
+      </i-cell-group>
+    </i-row>
+
+
+    <i-row>
+      <i-load-more i-class="footer" tip="Designed & Coded By Ming" loading="{{ false }}" />
+    </i-row>
+  </div>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import { TIPS } from 'wepy-utils'
+
+  export default class Setting extends wepy.page {
+    // 只在 Page 实例中存在的配置数据，对应于原生的 page.json 文件
+    config = {
+      iView: ['row', 'cell', 'icon', 'load-more'],
+      disableScroll: true,
+      navigationBarTitleText: '设置'
+    }
+    // 页面所需数据均需在这里声明，用于模板数据绑定
+    data = {}
+    // 事件处理函数（集中保存在 methods 对象中）
+    methods = {
+      // 复制微信
+      copyWechat (e) {
+        let text = e.target.dataset.text
+        wepy.setClipboardData({
+          data: text,
+          success: (res) => {
+            console.log('复制微信号成功！')
+            TIPS.toast({
+              title: '复制成功',
+              icon: 'SUCCESS'
+            })
+          }
+        })
+      },
+      // 跳转给赞小程序
+      navigateToMiniProgram (e) {
+        wepy.navigateToMiniProgram({
+          appId: 'wx18a2ac992306a5a4',
+          path: 'pages/apps/largess/detail?id=ffLsPqOjD7E%3D',
+          success: function (res) {
+            console.log('打开成功')
+          }
+        })
+      }
+    }
+    // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
+    components = {}
+    // 在 Page 和 Component 共用的生命周期函数
+    onLoad () {
+      console.log('onLoad Setting...')
+    }
+  }
+</script>

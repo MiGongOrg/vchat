@@ -1,0 +1,89 @@
+
+  <view class="page-wrap">
+
+    <scroll-view class="chat-container" scroll-y scroll-into-view="{{lastMessageId}}" scroll-top="9999999999" bindtap="handleChatContainer">
+      <view  wx:for="{{messages}}" wx:for-item="message" wx:key="id" id="{{message.id}}" wx:for-index="index" class="message {{message.type}}">
+        <view wx:if="{{message.type !== 'system'}}" class="message {{message.isMe ? 'me' : 'other'}}">
+          <view class="message-time">{{message.time}}</view>
+          <view class="message-content">
+            <view class="user-avatar">
+              <image src="{{message.user.avatarUrl}}" mode="aspectFill"/>
+            </view>
+            <view class="message-box">
+              <view class="message-header">
+                <view class="user-nickname" style="color: {{message.color}};">{{message.user.nickName}}</view>
+                <view class="delete-button">删除</view>
+              </view>
+              <view class="message-footer" wx:if="{{message.type === 'picture'}}">
+                <view class="message-picture">
+                  <view class="loading" wx:if="{{message.pictureInfo.loading}}"/>
+                  <image bindtap="previewPicture" data-index="{{index}}" bindload="imageOnLoad" binderror="imageOnLoadError" src="https://img.migong.org{{message.content}}" mode="widthFix" style="opacity: {{message.pictureInfo.loading ? '0' : '1'}}; width: {{message.pictureInfo.width < 150 ? message.pictureInfo.width : '150'}}px;" data-wpypreviewpicture-a="{{index}}"/>
+                </view>
+              </view>
+              <view class="message-footer" wx:else>
+                <view class="message-text">
+                  <rich-text nodes="{{message.content}}" bindtap="tap"/>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{message.type == 'system'}}" class="system-message">
+            {{message.content}}
+        </view>
+      </view>
+    </scroll-view>
+    <view class="footer" style="padding-bottom: {{systemInfo.isIPX ? '68' : '0'}}rpx;" hidden="{{isUserInfoShow}}">
+      <view class="input-panel">
+        <view class="icon-box" bindtap="showExtendPanel" data-wpyshowextendpanel-a="more">
+          <text class="iconfont icon-roundadd"/>
+        </view>
+        <view class="input-box">
+          <input cursor-spacing="10" type="text" value="{{inputContent}}" bindchange="changeInputContent" class="send-input" confirm-type="send" confirm-hold="{{true}}" bindconfirm="sendMessage" bindfocus="inputFocus" bindblur="inputBlur" bindinput="input"/>
+          <view class="icon-box" bindtap="showExtendPanel" data-wpyshowextendpanel-a="face">
+            <text class="iconfont icon-emoji"/>
+          </view>
+        </view>
+        <view class="icon-box" bindtap="chooseImage">
+          <text class="iconfont icon-pic"/>
+        </view>
+      </view>
+      <view class="extend-panel" style="height: {{extendPanelHeight}}rpx">
+        <view class="extend-more" hidden="{{extendIsShow !== 'more'}}">
+          <view class="extend-more-box">
+            <button class="extend-more-item" open-type="share">
+              <view class="iconfont">
+                <i-icon type="share" size="35" color="#6F7378"/>
+              </view>
+              <text class="extend-more-text">分享</text>
+            </button>
+          </view>
+        </view>
+
+        <view class="extend-faces" hidden="{{extendIsShow !== 'face'}}">
+          <view class="extend-faces-box">
+            <swiper>
+              <block wx:for="{{faces}}" wx:for-index="index" wx:for-item="item" wx:key="key">
+                <swiper-item>
+                  <block wx:for="{{item}}" wx:for-index="index" wx:for-item="value" wx:key="key">
+                    <view class="extend-faces-item" data-name="[{{value.name}}]" bindtap="addFace"><image src="./images/faces/{{value.index}}.png"/></view>
+                  </block>
+                </swiper-item>
+              </block>
+            </swiper>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    
+  <view class="getUserInfo"  wx:if="{{$getuserinfo$isUserInfoShow}}">
+    <i-button shape="circle" type="success" open-type="getUserInfo"  bind:getuserinfo="$getuserinfo$getUserInfo">授权加入</i-button>
+  </view>
+  <i-modal title="授权" visible="{{$getuserinfo$visible}}" actions="{{$getuserinfo$actions}}"  bind:click="$getuserinfo$openSetting">
+    <view>授权后才能正常使用摇一摇功能！</view>
+  </i-modal>
+  <i-message id="message"/>
+
+    <i-message id="message"/>
+  </view>

@@ -1,0 +1,39 @@
+@import "./../../components/getUserInfo.wxss";
+.shake {
+  height: 100%;
+  width: 100%;
+  background-color: black;
+}
+.shake .userinfo-btn {
+  width: 100%;
+  position: absolute;
+  bottom: 10rpx;
+  left: 0;
+}
+.shake-animation {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  transition: all 500ms ease;
+  background-color: #444444;
+}
+.shake-box {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+.shake-img {
+  position: absolute;
+  left: 50%;
+  width: 400rpx;
+  height: 400rpx;
+  transform: translate(-50%, 0);
+}
+.shake-img-up {
+  bottom: -200rpx;
+}
+.shake-img-down {
+  top: -200rpx;
+}

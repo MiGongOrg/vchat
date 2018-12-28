@@ -1,0 +1,402 @@
+<style lang="less">
+  .shake {
+    height: 100%;
+    width: 100%;
+    background-color: black;
+    .userinfo-btn {
+      width: 100%;
+      position: absolute;
+      bottom: 10rpx;
+      left: 0;
+    }
+    &-animation {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      transition: all 500ms ease;
+      background-color: #444444;
+    }
+    &-box {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    &-img {
+      position: absolute;
+      left: 50%;
+      width: 400rpx;
+      height: 400rpx;
+      transform: translate(-50%, 0);
+      &-up {
+        bottom: -200rpx;
+      }
+      &-down {
+        top: -200rpx;
+      }
+    }
+  }
+</style>
+
+<template lang="wxml">
+  <view class="shake" >
+    <view class="shake-animation shake-up" style="top: -{{open}}%; box-shadow: 0 {{open ? '6' : '0'}}rpx 0 #747474;" @tap="test">
+      <view class="shake-box">
+        <image class="shake-img shake-img-up" src="./images/shake.png"></image>
+      </view>
+    </view>
+    <view class="shake-animation shake-down" style="bottom: -{{open}}%; box-shadow: 0 {{open ? '-6' : '0'}}rpx 0 #747474;">
+      <view class="shake-box">
+        <image class="shake-img shake-img-down" src="./images/shake.png"></image>
+      </view>
+    </view>
+    <getuserinfo @createConnect.user="userInfoCreateConnect" @enter.user="userInfoEnter" :openid.sync="openid" :isUserInfoShow.sync="isUserInfoShow"></getuserinfo>
+    <i-message id="message" />
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import { connect } from 'wepy-redux'
+  import io from 'weapp.socket.io'
+  import Login from '@/mixins/login'
+  import { $Message } from 'wepy-iview'
+  import { API } from '@/common'
+  import { TIPS } from 'wepy-utils'
+  import GetUserInfo from '@/components/getUserInfo'
+
+  @connect({
+    userInfo (state) {
+      return state.user.info
+    }
+  })
+
+  export default class Shake extends wepy.page {
+    // 只在 Page 实例中存在的配置数据，对应于原生的 page.json 文件
+    config = {
+      navigationBarBackgroundColor: '#444444',
+      navigationBarTextStyle: 'white',
+      navigationBarTitleText: '摇一摇',
+      disableScroll: true
+    }
+    // 页面所需数据均需在这里声明，用于模板数据绑定
+    data = {
+      openid: null,
+      messages: [],
+      msgUuid: null,
+      isStart: false,
+      isUserInfoShow: false,
+      open: 0,
+      x: 0,
+      y: 0,
+      z: 0,
+      lastX: 0,
+      lastY: 0,
+      lastZ: 0,
+      lastTime: 0,
+      shakeSpeed: 110
+    }
+    // Login mixins
+    mixins = [Login]
+    // 监听
+    watch = {
+      openid (newValue, oldValue) {
+        console.log(newValue, oldValue)
+        if (newValue !== oldValue) {
+          this.roomId = newValue
+          this.$apply()
+          this.enter()
+        }
+      }
+    }
+    // 事件处理函数（集中保存在 methods 对象中）
+    methods = {
+      test () {
+        this.sendCount()
+      },
+      userInfoCreateConnect () {
+        this.createConnect()
+      },
+      userInfoEnter () {
+        this.enter()
+      },
+    }
+    // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
+    components = {
+      getuserinfo: GetUserInfo
+    }
+
+    shake (acceleration) {
+      let nowTime = new Date().getTime()
+      if (nowTime - this.lastTime > 100) {
+        let diffTime = nowTime - this.lastTime
+        this.lastTime = nowTime
+        this.x = acceleration.x
+        this.y = acceleration.y
+        this.z = acceleration.z
+        // 计算速率
+        let speed = Math.abs(this.x + this.y + this.z - this.lastX - this.lastY - this.lastZ) / diffTime * 10000
+        // 如果计算出来的速度超过了阈值，那么就算作用户成功摇一摇
+        if (speed > this.shakeSpeed) {
+          wepy.stopAccelerometer()
+          // 播放声音
+          this.audioContext.play()
+          this.open = 10
+          let timeOut = setTimeout(() => {
+            this.open = 0
+            this.$apply()
+            // 触发摇一摇，socket 推送 +1
+            if (this.isStart) {
+              this.sendCount()
+            } else {
+              TIPS.toast({
+                title: '未开始',
+                image: './images/clock.png'
+              })
+            }
+            // 停止声音
+            // this.audioContext.stop()
+            wepy.startAccelerometer()
+          }, 500)
+        }
+
+        this.lastX = this.x
+        this.lastY = this.y
+        this.lastZ = this.z
+        this.$apply()
+      }
+    }
+    sendCount () {
+      let type = 'shake'
+      let message = this.createUserMessage(type, this.userInfo)
+      this.socket.emit('new shake', message)
+    }
+    // 加速度
+    onAccelerometerChange () {
+      this.audioContext = wepy.createInnerAudioContext()
+      this.audioContext.src = 'https://img.migong.org/shake/shake_start.mp3'
+      this.$apply()
+      wepy.onAccelerometerChange((res) => {
+        this.shake(res)
+      })
+    }
+    // 生成一条聊天室的消息的唯一 ID
+    msgUuid () {
+      if (!this.msgUuid.next) {
+        this.msgUuid.next = 0
+        this.$apply()
+      }
+      return 'msg-' + ++this.msgUuid.next
+    }
+    // 生成聊天室的系统消息
+    createSystemMessage (content) {
+      return { id: this.msgUuid(), type: 'system', content }
+    }
+    // 生成聊天室的聊天消息
+    createUserMessage (type, user) {
+      console.log({type: type, user})
+      return {type: type, user}
+    }
+    // 通用更新当前消息集合的方法
+    updateMessages (updater) {
+      var messages = this.data.messages
+      updater(messages)
+      this.$apply()
+
+      // 需要先更新 messagess 数据后再设置滚动位置，否则不能生效
+      this.lastMessageId = messages.length
+        ? messages[messages.length - 1].id
+        : 'none'
+      this.$apply()
+    }
+    // 追加一条消息
+    pushMessage (message) {
+      this.updateMessages(messages => messages.push(message))
+    }
+    // 启动 Socket
+    enter () {
+      $Message({
+        content: '准备加入...',
+        type: 'default',
+        duration: 999
+      })
+      // 如果登录过，会记录当前用户在 this.me 上
+      if (!this.userInfo) {
+        wepy.getUserInfo({
+          success: (res) => {
+            let data = res.userInfo
+            data.openid = this.openid
+            wepy.$store.dispatch({type: 'USERINFO', payload: data})
+            console.log('启动摇一摇:', data)
+            this.createConnect()
+          },
+          fail: (error) => {
+            this.isUserInfoShow = true
+            this.$apply()
+            console.log(error)
+          }
+        })
+      } else {
+        console.log('me:::', this.me)
+        this.createConnect()
+      }
+    }
+    // 创建连接
+    createConnect (e) {
+      $Message({
+        content: '正在加入...',
+        type: 'default'
+      })
+
+      const socket = (this.socket = io(`${API.hostname}?type=shake&roomId=${this.roomId}`))
+
+      // 连接成功
+      socket.on('connect', () => {
+        $Message({
+          content: '加入成功...',
+          type: 'success'
+        })
+        let type = 'join'
+        let message = this.createUserMessage(type, this.userInfo)
+        this.socket.emit('new shake', message)
+      })
+      // 连接错误
+      socket.on('connect_error', d => {
+        let content = `连接错误: ${d}`
+        $Message({
+          content: content,
+          type: 'error'
+        })
+      })
+      // 连接超时
+      socket.on('connect_timeout', d => {
+        let content = `连接超时: ${d}`
+        $Message({
+          content: content,
+          type: 'error'
+        })
+      })
+      // 连接断开
+      socket.on('disconnect', reason => {
+        let content = `连接断开: ${reason}`
+        $Message({
+          content: content,
+          type: 'warning'
+        })
+      })
+      // 重新连接
+      socket.on('reconnect', attemptNumber => {
+        let content = `重新连接: ${attemptNumber}`
+        $Message({
+          content: content,
+          type: 'success'
+        })
+      })
+
+      socket.on('reconnect_failed', () => {
+        this.pushMessage(this.createSystemMessage('reconnect_failed'))
+      })
+      // 断开重连
+      socket.on('reconnect_attempt', () => {
+        $Message({
+          content: '正在尝试重连...',
+          type: 'default'
+        })
+      })
+      // 错误
+      socket.on('error', err => {
+        let content = `错误: ${err}`
+        $Message({
+          content: content,
+          type: 'error'
+        })
+      })
+      // 监听开始倒计时
+      socket.on('start countdown', d => {
+        console.log('触发了开始倒计时')
+        let time = 3
+        var timer = setInterval(() => {
+          if (time === 0) {
+            clearInterval(timer)
+            time = 3
+            // 开始倒计时
+            this.countdown()
+          } else {
+            TIPS.toast({
+              title: '       ',
+              image: `./images/${time}.png`,
+              mask: true,
+              duration: 1000
+            })
+            --time
+          }
+        }, 1000)
+      })
+      // 监听聊天室消息
+      socket.on('login', d => {
+        this.pushMessage(
+          this.createSystemMessage(`您已加入聊天室，当前共有 ${d.numUsers} 人`)
+        )
+      })
+      // 接收到新的聊天消息
+      socket.on('new shake', d => {
+        const { user, message } = d
+        console.log('接收到新消息：', message)
+        // this.pushMessage(this.createUserMessage(message, user))
+      })
+      // 用户进入
+      socket.on('user joined', d => {
+        console.log('用户来了：', d)
+        this.pushMessage(
+          this.createSystemMessage(`${d.user.nickName} 来了，当前共有 ${d.numUsers} 人`)
+        )
+      })
+      // 用户离开
+      socket.on('user left', d => {
+        this.pushMessage(
+          this.createSystemMessage(`${d.user.nickName} 离开了，当前共有 ${d.numUsers} 人`)
+        )
+      })
+
+      
+      socket.emit('add user', this.userInfo)
+    }
+    // 倒计时
+    countdown () {
+      this.isStart = true
+      let time = 30
+      clearInterval(timer)
+      var timer = setInterval(() => {
+        --time
+        if (!time) {
+          clearInterval(timer)
+          this.isStart = false
+        }
+        this.$apply()
+      }, 1000)
+    }
+    // 在 Page 和 Component 共用的生命周期函数
+    onLoad (options) {
+      if (options.roomId) {
+        this.roomId = options.roomId
+        this.getStroageOpenid()
+      } else {
+        // 获取缓存中的 openid 赋值给 roomId
+        this.getStroageOpenid()
+      }
+      this.$apply()
+      this.onAccelerometerChange()
+
+      wepy.showShareMenu({
+        withShareTicket: true
+      })
+      console.log('onLoad Shake...')
+    }
+    // 监听页面卸载
+    onUnload () {
+      // 主动断开 socket
+      this.socket.close()
+    }
+  }
+</script>

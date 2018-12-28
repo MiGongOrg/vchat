@@ -1,0 +1,16 @@
+.aboutContainer {
+  height: 100%;
+}
+.aboutContainer .feedback {
+  background-color: transparent;
+}
+.aboutContainer .feedback:after {
+  border-color: #00E7C1;
+}
+.aboutContainer .footer {
+  position: absolute;
+  left: 0;
+  bottom: 10rpx;
+  width: 100%;
+  text-align: center;
+}

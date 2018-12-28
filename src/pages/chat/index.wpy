@@ -1,0 +1,807 @@
+<style lang="less">
+  @colorD: #DDDDDD;
+  @color3: #333333;
+  .page-wrap {
+    display: flex;
+    flex-direction: column;
+    background: #ebebeb;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+  }
+  .chat-container {
+    box-sizing: border-box;
+    flex: 1;
+    text-align: center;
+    overflow-y: auto;
+    padding-bottom: 20rpx;
+  }
+  .system-message {
+    font-size: 24rpx;
+    line-height: 24rpx;
+    color: white;
+    background: #cecece;
+    border-radius: 4rpx;
+    display: inline-block;
+    padding: 8rpx 15rpx;
+    margin: 20rpx 0 10rpx;
+  }
+  .message {
+    color: @color3;
+    &-time {
+      font-size: 20rpx;
+      text-align: center;
+      padding: 20rpx;
+    }
+    &-content {
+      display: flex;
+    }
+    .user-avatar {
+      padding: 0 20rpx;
+      image {
+        display: block;
+        width: 80rpx;
+        height: 80rpx;
+        border-radius: 50%;
+        border: 4rpx solid rgba(255,255,255,.2);
+        vertical-align: middle;
+      }
+    }
+    &-box {
+      font-size: 24rpx;
+    }
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 550rpx;
+    }
+    &-picture {
+      position: relative;
+      float: left;
+      overflow: hidden;
+      image {
+        display: block;
+        width: auto;
+        height: auto;
+        opacity: 0;
+        transition: opacity 500ms;
+      }
+    }
+    &-text {
+      float: left;
+      display: inline-block;
+      color: white;
+      font-size: 28rpx;
+      padding: 20rpx;
+      border-radius: 8rpx;
+      margin-top: 10rpx;
+      max-width: 550rpx;
+      word-wrap: break-word;
+      text-align: left;
+      background-color: rgba(0,0,0,.3);
+    }
+  }
+  .footer {
+    background-color: #F4F4F4;
+  }
+  .input-panel {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100rpx;
+    padding: 10rpx 20rpx;
+    .iconfont {
+      color: #6F7378;
+      font-size: 66rpx;
+    }
+  }
+  .input-box {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    height: 72rpx;
+    background-color: white;
+    padding: 0 6rpx;
+    margin: 0 20rpx;
+    border: 2rpx solid @colorD;
+    border-radius: 36rpx;
+  }
+  .icon-box {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    width: 72rpx;
+    height: 72rpx;
+    line-height: 72rpx;
+  }
+  .send-input {
+    box-sizing: border-box;
+    padding-left: 20rpx;
+    width: 100%;
+    height: 72rpx;
+    line-height: 72rpx;
+    background-color: transparent;
+    border: 0;
+    font-size: 30rpx;
+  }
+  .extend-panel {
+    width: 100%;
+    background-color: #F4F4F4;
+    transition: height 70ms;
+    overflow: hidden;
+  }
+  .extend-more {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    height: 100%;
+    &-box {
+      width: 25%;
+    }
+    &-item {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0;
+      line-height: inherit;
+      font-size: 24rpx;
+      color: #6F7378;
+      font-weight: bold;
+      border-radius: 0;
+      background-color: transparent;
+      &:after {
+        border: 0;
+      }
+      .iconfont {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 120rpx;
+        height: 120rpx;
+        color: #6F7378;
+        font-size: 80rpx;
+        background-color: white;
+        border-radius: 20rpx;
+      }
+    }
+    &-text {
+      display: block;
+      width: 100%;
+      text-align: center;
+      margin-top: 10rpx;
+    }
+  }
+  .extend-faces {
+    width: 100%;
+    height: 100%;
+    &-box {
+      width: 100%;
+      height: 100%;
+    }
+    swiper {
+      height: 100%;
+    }
+    swiper-item {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-evenly;
+    }
+    &-item {
+      margin: 9rpx;
+      image {
+        display: block;
+        width: 66rpx;
+        height: 66rpx;
+      }
+    }
+  }
+  .emoji {
+    display: inline-block;
+    vertical-align: middle;
+    width: 44rpx;
+    height: 44rpx;
+  }
+</style>
+
+<template lang="wxml">
+  <view class="page-wrap">
+
+    <scroll-view class="chat-container" scroll-y scroll-into-view="{{lastMessageId}}" scroll-top="9999999999" @tap="handleChatContainer">
+      <view wx:for="{{messages}}" wx:for-item="message" wx:key="id" id="{{message.id}}" wx:for-index="index" class="message {{message.type}}">
+        <view wx:if="{{message.type !== 'system'}}" class="message {{message.isMe ? 'me' : 'other'}}">
+          <view class="message-time">{{message.time}}</view>
+          <view class="message-content">
+            <view class="user-avatar">
+              <image src="{{message.user.avatarUrl}}" mode="aspectFill"></image>
+            </view>
+            <view class="message-box">
+              <view class="message-header">
+                <view class="user-nickname" style="color: {{message.color}};">{{message.user.nickName}}</view>
+                <view class="delete-button">删除</view>
+              </view>
+              <view class="message-footer" wx:if="{{message.type === 'picture'}}">
+                <view class="message-picture">
+                  <view class="loading" wx:if="{{message.pictureInfo.loading}}"></view>
+                  <image
+                    @tap="previewPicture({{index}})"
+                    data-index="{{index}}"
+                    bindload="imageOnLoad"
+                    binderror="imageOnLoadError"
+                    src="https://img.migong.org{{message.content}}"
+                    mode="widthFix"
+                    style="opacity: {{message.pictureInfo.loading ? '0' : '1'}}; width: {{message.pictureInfo.width < 150 ? message.pictureInfo.width : '150'}}px;"
+                  ></image>
+                </view>
+              </view>
+              <view class="message-footer" wx:else>
+                <view class="message-text">
+                  <rich-text nodes="{{message.content}}" bindtap="tap"></rich-text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{message.type == 'system'}}" class="system-message">
+            {{message.content}}
+        </view>
+      </view>
+    </scroll-view>
+    <view class="footer" style="padding-bottom: {{systemInfo.isIPX ? '68' : '0'}}rpx;" hidden="{{isUserInfoShow}}">
+      <view class="input-panel">
+        <view class="icon-box" @tap="showExtendPanel('more')">
+          <text class="iconfont icon-roundadd"></text>
+        </view>
+        <view class="input-box">
+          <input cursor-spacing="10" type="text" value="{{inputContent}}" bindchange="changeInputContent" class="send-input" confirm-type="send" confirm-hold="{{true}}" bindconfirm="sendMessage" bindfocus="inputFocus" bindblur="inputBlur" bindinput="input"></input>
+          <view class="icon-box" @tap="showExtendPanel('face')">
+            <text class="iconfont icon-emoji"></text>
+          </view>
+        </view>
+        <view class="icon-box" @tap="chooseImage">
+          <text class="iconfont icon-pic"></text>
+        </view>
+      </view>
+      <view class="extend-panel" style="height: {{extendPanelHeight}}rpx">
+        <view class="extend-more" hidden="{{extendIsShow !== 'more'}}">
+          <view class="extend-more-box">
+            <button class="extend-more-item" open-type="share">
+              <view class="iconfont">
+                <i-icon type="share" size="35" color="#6F7378" />
+              </view>
+              <text class="extend-more-text">分享</text>
+            </button>
+          </view>
+        </view>
+
+        <view class="extend-faces" hidden="{{extendIsShow !== 'face'}}">
+          <view class="extend-faces-box">
+            <swiper>
+              <repeat
+                for="{{faces}}"
+                item="item"
+              >
+                <swiper-item>
+                  <repeat
+                    for="{{item}}"
+                    item="value"
+                  >
+                    <view class="extend-faces-item" data-name="[{{value.name}}]" @tap="addFace"><image src="./images/faces/{{value.index}}.png"></image></view>
+                  </repeat>
+                </swiper-item>
+              </repeat>
+            </swiper>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <getuserinfo @createConnect.user="userInfoCreateConnect" @enter.user="userInfoEnter" :openid.sync="openid" :isUserInfoShow.sync="isUserInfoShow"></getuserinfo>
+    <i-message id="message" />
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import { connect } from 'wepy-redux'
+  import io from 'weapp.socket.io'
+  import { TIPS } from 'wepy-utils'
+  import { $Message } from 'wepy-iview'
+  import { Upyun, API } from '@/common'
+  import Login from '@/mixins/login'
+  import GetUserInfo from '@/components/getUserInfo'
+
+  // 又拍云SDK
+  const upyun = new Upyun({
+    bucket: 'migongorg-img-serve',
+    operator: 'chat',
+    getSignatureUrl: API.upyun
+  })
+
+  @connect({
+    userInfo (state) {
+      return state.user.info
+    }
+  })
+
+  export default class Chat extends wepy.page {
+    // 只在 Page 实例中存在的配置数据，对应于原生的 page.json 文件
+    config = {
+      navigationBarTitleText: '聊天室',
+      disableScroll: true
+    }
+    // 页面所需数据均需在这里声明，用于模板数据绑定
+    data = {
+      systemInfo: {},
+      openid: null,
+      isUserInfoShow: false,
+      extendPanelHeight: 0,
+      msgUuid: null,
+      inputContent: '',
+      messages: [],
+      lastMessageId: 'none',
+      extendIsShow: null,
+      faces: [
+        [
+          {name: '微笑', index: 0},
+          {name: '憨笑', index: 1},
+          {name: '调皮', index: 2},
+          {name: '流汗', index: 3},
+          {name: '真香', index: 4},
+          {name: '严肃', index: 5},
+          {name: '愤怒', index: 6},
+          {name: '撇嘴', index: 7},
+          {name: '委屈', index: 8},
+          {name: '难过', index: 9},
+          {name: '流泪', index: 10},
+          {name: '尴尬', index: 11},
+          {name: '呲牙', index: 12},
+          {name: '坏笑', index: 13},
+          {name: '阴险', index: 14},
+          {name: '呕吐', index: 15},
+          {name: '装睡', index: 16},
+          {name: '发呆', index: 17},
+          {name: '傲慢', index: 18},
+          {name: '闭嘴', index: 19},
+          {name: '偷笑', index: 20},
+          {name: '可爱', index: 21},
+          {name: '惊讶', index: 22},
+          {name: '比心', index: 23},
+          {name: '心碎', index: 24},
+          {name: '喝彩', index: 25},
+          {name: '鞭炮', index: 26},
+          {name: '阳光', index: 27},
+          {name: '啤酒', index: 28},
+          {name: '色眯眯', index: 29},
+          {name: '亲亲', index: 30},
+          {name: '嘴唇', index: 31},
+          {name: '玫瑰', index: 32},
+          {name: '凋谢', index: 33},
+          {name: '秀儿', index: 34}
+        ]
+      ],
+      facesKey: {
+        '[微笑]': 0,
+        '[憨笑]': 1,
+        '[调皮]': 2,
+        '[流汗]': 3,
+        '[真香]': 4,
+        '[严肃]': 5,
+        '[愤怒]': 6,
+        '[撇嘴]': 7,
+        '[委屈]': 8,
+        '[难过]': 9,
+        '[流泪]': 10,
+        '[尴尬]': 11,
+        '[呲牙]': 12,
+        '[坏笑]': 13,
+        '[阴险]': 14,
+        '[呕吐]': 15,
+        '[装睡]': 16,
+        '[发呆]': 17,
+        '[傲慢]': 18,
+        '[闭嘴]': 19,
+        '[偷笑]': 20,
+        '[可爱]': 21,
+        '[惊讶]': 22,
+        '[比心]': 23,
+        '[心碎]': 24,
+        '[喝彩]': 25,
+        '[鞭炮]': 26,
+        '[阳光]': 27,
+        '[啤酒]': 28,
+        '[色眯眯]': 29,
+        '[亲亲]': 30,
+        '[嘴唇]': 31,
+        '[玫瑰]': 32,
+        '[凋谢]': 33,
+        '[秀儿]': 34
+      }
+    }
+    // Login mixins
+    mixins = [Login]
+    // 监听
+    watch = {
+      openid (newValue, oldValue) {
+        console.log(newValue, oldValue)
+        if (!this.roomId) {
+          this.roomId = newValue
+          this.$apply()
+          this.enter()
+        } else {
+          this.enter()
+        }
+      }
+    }
+    // 事件处理函数（集中保存在 methods 对象中）
+    methods = {
+      userInfoCreateConnect () {
+        this.createConnect()
+      },
+      userInfoEnter () {
+        this.enter()
+      },
+      // 向输入框中添加表情符号
+      addFace (e) {
+        let faceName = e.currentTarget.dataset.name
+        this.inputContent += faceName
+        this.$apply()
+      },
+      // 从本地相册选择图片或使用相机拍照
+      chooseImage () {
+        wepy.chooseImage({
+          count: 1,
+          sizeType: ['compressed'],
+          sourceType: ['album', 'camera'],
+          success: (res) => {
+            const tempPicturePaths = res.tempFilePaths[0]
+            wepy.getImageInfo({
+              src: tempPicturePaths,
+              success: (res) => {
+                let pictureInfo = {
+                  width: res.width,
+                  height: res.height,
+                  loading: true
+                }
+                this.uploadPicture(tempPicturePaths, pictureInfo)
+              }
+            })
+          },
+          fail: (error) => {
+            console.log('从本地相册选择图片或使用相机拍照：', error)
+          }
+        })
+      },
+      // 显示或隐藏扩展功能
+      showExtendPanel (value) {
+        if (this.extendIsShow === value) {
+          this.extendIsShow = null
+          this.extendPanelHeight = 0
+        } else if (value === 'face') {
+          this.extendIsShow = value
+          this.extendPanelHeight = 340
+        } else if (value === 'more') {
+          this.extendIsShow = value
+          this.extendPanelHeight = 210
+        }
+        this.$apply()
+      },
+      imageOnLoad (e) {
+        let index = e.target.dataset.index
+        // 隐藏 loading 动画
+        this.messages[index].pictureInfo.loading = false
+        this.$apply()
+      },
+      imageOnLoadError (error) {
+        console.log('图片加载失败', error)
+      },
+      handleChatContainer () {
+        this.hiddenExtendPanel()
+      },
+      input (e) {
+        this.inputContent = e.detail.value
+        this.$apply()
+      },
+      // 输入框获取焦点
+      inputFocus () {
+        console.log('获取焦点')
+      },
+      // 输入框失去焦点
+      inputBlur () {
+        console.log('失去焦点')
+      },
+      // 发送消息
+      sendMessage (e) {
+        console.log('发送消息：', e)
+        const msg = e.detail.value
+        if (!msg) {
+          return
+        }
+
+        let content = this.strSplit(msg)
+
+        let message = this.createUserMessage(content, this.userInfo)
+        this.socket.emit('new message', message)
+        this.pushMessage(message)
+        // 清空输入框
+        this.inputContent = ''
+        this.$apply()
+      },
+      // 预览图片
+      previewPicture (index) {
+        let url = `https://img.migong.org${this.messages[index].content}`
+        wepy.previewImage({
+          current: url,
+          urls: [url]
+        })
+      }
+    }
+    // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
+    components = {
+      getuserinfo: GetUserInfo
+    }
+    // 上传图片到又拍云
+    uploadPicture (picture, pictureInfo) {
+      wepy.showLoading({
+        title: '上传中...',
+        mask: true
+      })
+      // 隐藏底部扩展功能面板
+      this.extendIsShow = null
+      this.extendPanelHeight = 0
+      this.$apply()
+      let path = '/chat-images'
+      // 时间格式路径
+      let timePath = this.handleDate('path')
+      upyun.upload({
+        localPath: picture,
+        remotePath: `${path}/${timePath}`,
+        success: (res) => {
+          wepy.hideLoading()
+          let data = JSON.parse(res.data)
+          let url = data.url
+          let type = 'picture'
+          let message = this.createUserMessage(url, this.userInfo, type, pictureInfo)
+          this.socket.emit('new message', message)
+          this.pushMessage(message)
+
+          TIPS.toast({
+            icon: 'SUCCESS',
+            title: '发送成功'
+          })
+        },
+        fail: ({errMsg}) => {
+          console.log(errMsg)
+        }
+      })
+    }
+    // 生成一条聊天室的消息的唯一 ID
+    msgUuid () {
+      if (!this.msgUuid.next) {
+        this.msgUuid.next = 0
+        this.$apply()
+      }
+      return 'msg-' + ++this.msgUuid.next
+    }
+    // 生成聊天室的系统消息
+    createSystemMessage (content) {
+      return { id: this.msgUuid(), type: 'system', content }
+    }
+    // 生成聊天室的聊天消息
+    createUserMessage (content, user, type, pictureInfo, isMe) {
+      const time = this.handleDate('time')
+      const id = this.msgUuid()
+      console.log({ id: id, type: type ? type : 'speak', content, user, isMe, time, pictureInfo })
+      return { id: id, type: type ? type : 'speak', content, user, isMe, time, pictureInfo }
+    }
+    // 启动聊天室
+    enter () {
+      this.pushMessage(this.createSystemMessage('正在登录...'))
+      // 如果登录过，会记录当前用户在 this.me 上
+      if (!this.userInfo) {
+        wepy.getUserInfo({
+          success: (res) => {
+            let data = res.userInfo
+            data.openid = this.openid
+            wepy.$store.dispatch({type: 'USERINFO', payload: data})
+
+            console.log('启动聊天室:', data)
+            this.createConnect()
+          },
+          fail: (error) => {
+            this.isUserInfoShow = true
+            this.$apply()
+            console.log(error)
+          }
+        })
+      } else {
+        console.log('me:::', this.me)
+        this.createConnect()
+      }
+    }
+
+    // 通用更新当前消息集合的方法
+    updateMessages (updater) {
+      var messages = this.data.messages
+      updater(messages)
+      this.$apply()
+
+      // 需要先更新 messagess 数据后再设置滚动位置，否则不能生效
+      this.lastMessageId = messages.length
+        ? messages[messages.length - 1].id
+        : 'none'
+      this.$apply()
+    }
+
+    // 追加一条消息
+    pushMessage (message) {
+      this.updateMessages(messages => messages.push(message))
+    }
+
+    // 替换上一条消息
+    amendMessage (message) {
+      this.updateMessages(messages => messages.splice(-1, 1, message))
+    }
+
+    // 删除上一条消息
+    popMessage () {
+      this.updateMessages(messages => messages.pop())
+    }
+    // 监听 input 输入内容
+    changeInputContent (e) {
+      this.inputContent = e.detail.value
+      this.$apply()
+    }
+    // 创建连接
+    createConnect (e) {
+      this.amendMessage(this.createSystemMessage('正在加入群聊...'))
+
+      const socket = (this.socket = io(`${API.hostname}?type=chat&roomId=${this.roomId}`))
+
+      // 连接成功
+      socket.on('connect', () => {
+        this.popMessage()
+        this.pushMessage(this.createSystemMessage('连接成功'))
+      })
+      // 连接错误
+      socket.on('connect_error', d => {
+        this.pushMessage(this.createSystemMessage(`connect_error: ${d}`))
+      })
+      // 连接超时
+      socket.on('connect_timeout', d => {
+        this.pushMessage(this.createSystemMessage(`connect_timeout: ${d}`))
+      })
+      // 连接断开
+      socket.on('disconnect', reason => {
+        this.pushMessage(this.createSystemMessage(`disconnect: ${reason}`))
+      })
+      // 重新连接
+      socket.on('reconnect', attemptNumber => {
+        this.pushMessage(
+          this.createSystemMessage(`reconnect success: ${attemptNumber}`)
+        )
+      })
+
+      socket.on('reconnect_failed', () => {
+        this.pushMessage(this.createSystemMessage('reconnect_failed'))
+      })
+      // 断开重连
+      socket.on('reconnect_attempt', () => {
+        this.pushMessage(this.createSystemMessage('正在尝试重连'))
+      })
+      // 错误
+      socket.on('error', err => {
+        this.pushMessage(this.createSystemMessage(`error: ${err}`))
+      })
+      // 监听聊天室消息
+      socket.on('login', d => {
+        this.pushMessage(
+          this.createSystemMessage(`您已加入聊天室，当前共有 ${d.numUsers} 人`)
+        )
+      })
+      // 接收到新的聊天消息
+      socket.on('new message', d => {
+        const { user, message } = d
+        console.log('接收到新消息：', message)
+        this.pushMessage(message)
+      })
+      // 用户进入
+      socket.on('user joined', d => {
+        console.log('用户来了：', d)
+        this.pushMessage(
+          this.createSystemMessage(`${d.user.nickName} 来了，当前共有 ${d.numUsers} 人`)
+        )
+      })
+      // 用户离开
+      socket.on('user left', d => {
+        this.pushMessage(
+          this.createSystemMessage(`${d.user.nickName} 离开了，当前共有 ${d.numUsers} 人`)
+        )
+      })
+
+      socket.on('typing', d => {})
+
+      socket.on('stop typing', d => {})
+      socket.emit('add user', this.userInfo)
+    }
+    // 隐藏扩展面板
+    hiddenExtendPanel () {
+      this.extendIsShow = null
+      this.extendPanelHeight = 0
+      this.$apply()
+    }
+    // 转发带参数（判断是否是转发来源）
+    onShareAppMessage (res) {
+      if (res.from === 'button') {
+        // 来自页面内转发按钮
+        console.log(res.target)
+      }
+      return {
+        title: `${this.userInfo.nickName} 邀请你加入聊天室`,
+        path: `/pages/chat/index?roomId=${this.roomId}`,
+        imageUrl: './images/chat_share.png'
+      }
+    }
+    // 聊天文本拆分（将字符串拆分成数组）
+    strSplit (str) {
+      let result = ''
+      let arr = str.split(/(\[[^\[\]]*\])/g)
+      for (var i = 0; i < arr.length; i++) {
+        let isFace = arr[i].match(/\[[^\[\]]*\]/g)
+        if (isFace) {
+          result += `<img class="emoji" src="https://img.migong.org/chat/faces/${this.facesKey[isFace[0]]}.png">`
+        } else {
+          if (arr[i]) {
+            result += `<span>${arr[i]}</span>`
+          }
+        }
+      }
+      console.log('result:', result)
+      return result
+    }
+    // 处理时间格式
+    handleDate (type) {
+      const date = new Date()
+      let y = date.getFullYear()
+      let m = date.getMonth()+1
+      let d = date.getDate()
+      let hh = date.getHours()
+      let mm = date.getMinutes()
+      let ss = date.getSeconds()
+      let result = ''
+      if (type === 'time') {
+        // 聊天展示日期
+        result = `${y}/${m}/${d} ${hh}:${mm}:${ss}`
+      } else if (type === 'path') {
+        // 又拍云（图片存储路径）
+        let time = date.getTime()
+        result = `${y}/${m}/${d}/${time}`
+      }
+      return result
+    }
+    // 在 Page 和 Component 共用的生命周期函数
+    onLoad (options) {
+      console.log('options:', options)
+      if (options.roomId) {
+        this.roomId = options.roomId
+        this.getStroageOpenid()
+      } else {
+        // 获取缓存中的 openid 赋值给 roomId
+        this.getStroageOpenid()
+      }
+      // 获取设备信息
+      this.systemInfo = wepy.$instance.globalData.systemInfo
+      this.$apply()
+    }
+    // 监听页面卸载
+    onUnload () {
+      // 主动断开 socket
+      this.socket.close()
+    }
+  }
+</script>

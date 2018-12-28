@@ -1,0 +1,62 @@
+<style lang="less">
+  .userContainer {
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
+<template lang="wxml">
+  <view class="userContainer">
+    <i-cell-group>
+      <i-cell i-class="black-color" title="大屏地址" value="点击复制" label="在PC端浏览器中打开" bind:click="copyUrl">
+        <i-icon type="computer_fill" slot="icon" size="20" color="#5A5A5A" />
+      </i-cell>
+      <i-cell i-class="black-color" title="关于我们" is-link url="/pages/about/index">
+        <i-icon type="group_fill" slot="icon" size="20" color="#5A5A5A" />
+      </i-cell>
+    </i-cell-group>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import { TIPS } from 'wepy-utils'
+  import { API } from '@/common'
+  import Login from '@/mixins/login'
+
+  export default class User extends wepy.page {
+    // 只在 Page 实例中存在的配置数据，对应于原生的 page.json 文件
+    config = {
+      disableScroll: true,
+      navigationBarTitleText: '我的'
+    }
+    // 页面所需数据均需在这里声明，用于模板数据绑定
+    data = {}
+    // Login mixins
+    mixins = [Login]
+    // 事件处理函数（集中保存在 methods 对象中）
+    methods = {
+      copyUrl () {
+        let url = `${API.wall}/?id=${this.openid}`
+        wepy.setClipboardData({
+          data: url,
+          success: (res) => {
+            console.log('复制大屏地址成功！')
+            TIPS.toast({
+              title: '复制成功',
+              icon: 'SUCCESS'
+            })
+          }
+        })
+      }
+    }
+    // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
+    components = {}
+    // 在 Page 和 Component 共用的生命周期函数
+    onLoad () {
+      // 获取缓存中的 openid
+      this.getStroageOpenid()
+      console.log('onLoad User...')
+    }
+  }
+</script>

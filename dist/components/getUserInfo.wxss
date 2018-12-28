@@ -1,0 +1,6 @@
+.getUserInfo {
+  width: 100%;
+  position: absolute;
+  bottom: 10rpx;
+  left: 0;
+}

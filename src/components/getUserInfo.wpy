@@ -1,0 +1,95 @@
+<style lang="less">
+  .getUserInfo {
+    width: 100%;
+    position: absolute;
+    bottom: 10rpx;
+    left: 0;
+  }
+</style>
+
+<template lang="wxml">
+  <view class="getUserInfo" wx:if="{{isUserInfoShow}}">
+    <i-button shape="circle" type="success" open-type="getUserInfo" bind:getuserinfo="getUserInfo">授权加入</i-button>
+  </view>
+  <i-modal title="授权" visible="{{visible}}" actions="{{actions}}" bind:click="openSetting">
+    <view>授权后才能正常使用摇一摇功能！</view>
+  </i-modal>
+  <i-message id="message" />
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import { $Message } from 'wepy-iview'
+
+  export default class GetUserInfo extends wepy.component {
+    data = {
+      visible: false,
+      actions: [{
+        name: '去授权'
+      }]
+    }
+    props = {
+      openid: {
+        type: String,
+        twoWay: true
+      },
+      isUserInfoShow: {
+        type: Boolean,
+        default: false,
+        twoWay: true
+      }
+    }
+    // 事件处理函数（集中保存在 methods 对象中）
+    methods = {
+      getUserInfo (res) {
+        let userInfo = res.detail.userInfo
+        if (userInfo) {
+          let data = userInfo
+          data.openid = this.openid
+          wepy.$store.dispatch({type: 'USERINFO', payload: data})
+          console.log('userInfo', data)
+
+          this.isUserInfoShow = false
+          this.$apply()
+          this.$emit('createConnect')
+        } else {
+          this.isUserInfoShow = false
+          this.visible = true
+          this.$apply()
+        }
+        console.log('getUserInfo', res)
+      },
+      openSetting () {
+        wepy.openSetting({
+          success: (res) => {
+            console.log(res)
+            if (res.authSetting['scope.userInfo']) {
+              this.visible = false
+              this.$apply()
+              this.$emit('enter')
+              $Message({
+                content: '授权成功',
+                type: 'success'
+              })
+            }
+          },
+          fail: (error) => {
+            $Message({
+              content: '授权失败',
+              type: 'error'
+            })
+            console.log('从权限设置页面返回了', error)
+          }
+        })
+      }
+    }
+    // 声明组件之间的事件处理函数
+    events = {}
+    // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
+    components = {}
+    // 在 Page 和 Component 共用的生命周期函数
+    onLoad () {
+      console.log('onLoad GetUserInfo...')
+    }
+  }
+</script>

@@ -1,0 +1,23 @@
+
+  <view class="shake">
+    <view class="shake-animation shake-up" style="top: -{{open}}%; box-shadow: 0 {{open ? '6' : '0'}}rpx 0 #747474;" bindtap="test">
+      <view class="shake-box">
+        <image class="shake-img shake-img-up" src="./images/shake.png"/>
+      </view>
+    </view>
+    <view class="shake-animation shake-down" style="bottom: -{{open}}%; box-shadow: 0 {{open ? '-6' : '0'}}rpx 0 #747474;">
+      <view class="shake-box">
+        <image class="shake-img shake-img-down" src="./images/shake.png"/>
+      </view>
+    </view>
+    
+  <view class="getUserInfo"  wx:if="{{$getuserinfo$isUserInfoShow}}">
+    <i-button shape="circle" type="success" open-type="getUserInfo"  bind:getuserinfo="$getuserinfo$getUserInfo">授权加入</i-button>
+  </view>
+  <i-modal title="授权" visible="{{$getuserinfo$visible}}" actions="{{$getuserinfo$actions}}"  bind:click="$getuserinfo$openSetting">
+    <view>授权后才能正常使用摇一摇功能！</view>
+  </i-modal>
+  <i-message id="message"/>
+
+    <i-message id="message"/>
+  </view>

@@ -1,0 +1,30 @@
+
+  <div class="settingContainer">
+    <i-row>
+      <i-cell i-class="black-color" title="关于作者" label="勾搭他，加个微信">
+        <button class="feedback" slot="footer" bindtap="copyWechat" data-text="migongorg">
+          <i-icon type="interactive" color="#00E7C1" size="20"/>
+        </button>
+      </i-cell>
+    </i-row>
+
+    <i-row>
+      <i-cell-group>
+        <i-cell i-class="black-color" title="给赞" label="大爷的打赏，是我活下去的动力。">
+          <button class="feedback" slot="footer" bindtap="navigateToMiniProgram">
+            <i-icon type="praise" color="#00E7C1" size="20"/>
+          </button>
+        </i-cell>
+        <i-cell i-class="black-color" title="意见反馈" label="回手掏，看不见，走位，走位，哎！难受。">
+          <button class="feedback" slot="footer" open-type="feedback">
+            <i-icon type="brush" color="#00E7C1" size="20"/>
+          </button>
+        </i-cell>
+      </i-cell-group>
+    </i-row>
+
+
+    <i-row>
+      <i-load-more i-class="footer" tip="Designed & Coded By Ming" loading="{{ false }}"/>
+    </i-row>
+  </div>

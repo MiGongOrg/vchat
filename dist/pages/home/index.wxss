@@ -1,0 +1,11 @@
+.home-card {
+  box-sizing: border-box;
+  margin-top: 20rpx;
+  padding: 0 20rpx;
+}
+.custom-card image {
+  box-sizing: border-box;
+  padding: 30rpx;
+  border-radius: 50%;
+  box-shadow: 0 2rpx 17rpx 0 rgba(158, 180, 231, 0.15);
+}

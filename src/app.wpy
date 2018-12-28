@@ -1,0 +1,86 @@
+<style lang="less" src="./styles/base.less"></style>
+
+<script>
+import wepy from 'wepy'
+
+import { setStore } from 'wepy-redux'
+import configStore from './store'
+
+const store = configStore()
+setStore(store)
+
+wepy.$store = store
+
+export default class extends wepy.app {
+  config = {
+    pages: [
+      'pages/home/index',
+      'pages/user/index',
+      'pages/about/index',
+      'pages/index'
+    ],
+    subPackages: [
+      {
+        'root': 'pages/shake',
+        'pages': [
+          'index'
+        ]
+      },
+      {
+        'root': 'pages/chat',
+        'pages': [
+          'index'
+        ]
+      }
+    ],
+    window: {
+      backgroundTextStyle: 'light',
+      navigationBarBackgroundColor: 'white',
+      navigationBarTitleText: 'chat',
+      navigationBarTextStyle: 'black',
+      enablePullDownRefresh: false
+    },
+    tabBar: {
+      'color': '#707070',
+      'selectedColor': '#00E7C1',
+      'borderStyle': 'white',
+      'list': [{
+        'selectedIconPath': 'images/ic_home_selected.png',
+        'iconPath': 'images/ic_home.png',
+        'pagePath': 'pages/home/index',
+        'text': '首页'
+      },
+      {
+        'selectedIconPath': 'images/ic_my_selected.png',
+        'iconPath': 'images/ic_my.png',
+        'pagePath': 'pages/user/index',
+        'text': '我的'
+      }]
+    },
+    navigateToMiniProgramAppIdList: [
+      'wx18a2ac992306a5a4'
+    ]
+  }
+  // 全局数据对象
+  globalData = {
+    systemInfo: {}
+  }
+
+  constructor () {
+    super()
+    this.use('requestfix')
+  }
+  // 获取设备信息
+  getSystemInfo () {
+    this.globalData.systemInfo = wepy.getSystemInfoSync()
+    // 根据 model 进行判断
+    if (this.globalData.systemInfo.model.search('iPhone X') != -1) {
+      this.globalData.systemInfo.isIPX = true
+    }
+  }
+  onLaunch () {
+    this.getSystemInfo()
+    console.log('onLaunch...')
+  }
+}
+</script>

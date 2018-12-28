@@ -1,0 +1,65 @@
+<style lang="less">
+  .home {
+    &-card {
+      box-sizing: border-box;
+      margin-top: 20rpx;
+      padding: 0 20rpx;
+    }
+  }
+  .custom-card {
+    image {
+      box-sizing: border-box;
+      padding: 30rpx;
+      border-radius: 50%;
+      box-shadow: 0 2rpx 17rpx 0 rgba(158, 180, 231, 0.15);
+    }
+  }
+</style>
+
+<template lang="wxml">
+  <div class="home">
+    <view class="home-card">
+      <i-card class="custom-card" title="聊天室" extra="" full="true" thumb="https://img.migong.org/home/ic_chat.png" data-page="chat" @tap="navigateTo">
+        <!-- <view slot="content">内容不错</view>
+        <view slot="footer">尾部内容</view> -->
+      </i-card>
+    </view>
+    <view class="home-card"> 
+      <i-card class="custom-card" title="摇一摇" extra="" full="true" thumb="https://img.migong.org/home/ic_shake.png" data-page="shake" @tap="navigateTo">
+        <!-- <view slot="content">内容不错</view>
+        <view slot="footer">尾部内容</view> -->
+      </i-card>
+    </view>
+  </div>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import { TIPS } from 'wepy-utils'
+
+  export default class Home extends wepy.page {
+    // 只在 Page 实例中存在的配置数据，对应于原生的 page.json 文件
+    config = {
+      navigationBarTextStyle: 'black',
+      navigationBarBackgroundColor: 'white',
+      navigationBarTitleText: '首页',
+      disableScroll: true
+    }
+    // 页面所需数据均需在这里声明，用于模板数据绑定
+    data = {}
+    // 事件处理函数（集中保存在 methods 对象中）
+    methods = {
+      navigateTo (e) {
+        let page = e.target.dataset.page
+        let url = `/pages/${page}/index`
+        TIPS.navigateTo(url)
+      }
+    }
+    // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
+    components = {}
+    // 在 Page 和 Component 共用的生命周期函数
+    onLoad () {
+      console.log('onLoad Home...')
+    }
+  }
+</script>

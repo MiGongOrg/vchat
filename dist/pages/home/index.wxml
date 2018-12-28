@@ -1,0 +1,15 @@
+
+  <div class="home">
+    <view class="home-card">
+      <i-card class="custom-card" title="聊天室" extra="" full="true" thumb="https://img.migong.org/home/ic_chat.png" data-page="chat" bindtap="navigateTo">
+        <!-- <view slot="content">内容不错</view>
+        <view slot="footer">尾部内容</view> -->
+      </i-card>
+    </view>
+    <view class="home-card"> 
+      <i-card class="custom-card" title="摇一摇" extra="" full="true" thumb="https://img.migong.org/home/ic_shake.png" data-page="shake" bindtap="navigateTo">
+        <!-- <view slot="content">内容不错</view>
+        <view slot="footer">尾部内容</view> -->
+      </i-card>
+    </view>
+  </div>
