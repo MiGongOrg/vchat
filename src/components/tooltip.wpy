@@ -1,0 +1,87 @@
+<style lang="less">
+  .tooltip {
+    position: absolute;
+    left: 0;
+    top: 10rpx;
+    width: 100%;
+    z-index: 999;
+    &-inner {
+      position: absolute;
+      right: 50rpx;
+      top: 0;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 10rpx 16rpx;
+      border-radius: 8rpx;
+      background-color: #00E7C1;
+    }
+    &:before {
+      position: absolute;
+      top: -10rpx;
+      right: 130rpx;
+      width: 0;
+      height: 0;
+      border-color: transparent;
+      border-style: solid;
+      border-bottom-color: #00E7C1;
+      content: "";
+      border-width: 0 10rpx 10rpx;
+    }
+    text {
+      display: inline-block;
+      font-size: 24rpx;
+      text-align: center;
+      color: white;
+    }
+    icon {
+      display: block;
+      margin-left: 10rpx;
+    }
+  }
+</style>
+
+<template lang="wxml">
+  <view class="tooltip" wx:if="{{show}}" @tap="close">
+    <view class="tooltip-inner">
+      <text>{{text}}</text>
+      <icon type="cancel" size="14" color="{{color}}" />
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class Tooltip extends wepy.component {
+    data = {
+      color: 'white'
+    }
+    props = {
+      text: {
+        type: String,
+        default: '返回首页或分享给好友'
+      },
+      show: {
+        type: Boolean,
+        default: false,
+        twoWay: true
+      }
+    }
+    // 事件处理函数（集中保存在 methods 对象中）
+    methods = {
+      close () {
+        this.show = false
+        this.$apply()
+      }
+    }
+    // 声明组件之间的事件处理函数
+    events = {}
+    // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
+    components = {}
+    // 在 Page 和 Component 共用的生命周期函数
+    onLoad () {
+      console.log('onLoad Tooltip...')
+    }
+  }
+</script>

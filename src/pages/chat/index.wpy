@@ -180,11 +180,12 @@
     width: 100%;
     height: 100%;
     &-box {
+      position: relative;
       width: 100%;
       height: 100%;
     }
     swiper {
-      height: 100%;
+      height: 340rpx;
     }
     swiper-item {
       display: flex;
@@ -200,6 +201,12 @@
         height: 66rpx;
       }
     }
+    &-send {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+    }
   }
   .emoji {
     display: inline-block;
@@ -211,7 +218,7 @@
 
 <template lang="wxml">
   <view class="page-wrap">
-
+    <tooltip :show.sync="showTooltip" :text.sync="tooltipText"></tooltip>
     <scroll-view class="chat-container" scroll-y scroll-into-view="{{lastMessageId}}" scroll-top="9999999999" @tap="handleChatContainer">
       <view wx:for="{{messages}}" wx:for-item="message" wx:key="id" id="{{message.id}}" wx:for-index="index" class="message {{message.type}}">
         <view wx:if="{{message.type !== 'system'}}" class="message {{message.isMe ? 'me' : 'other'}}">
@@ -296,6 +303,9 @@
                 </swiper-item>
               </repeat>
             </swiper>
+            <view class="extend-faces-send">
+              <i-button bind:click="sendMessage" type="primary" long="true">发送</i-button>
+            </view>
           </view>
         </view>
       </view>
@@ -315,6 +325,7 @@
   import { Upyun, API } from '@/common'
   import Login from '@/mixins/login'
   import GetUserInfo from '@/components/getUserInfo'
+  import Tooltip from '@/components/tooltip'
 
   // 又拍云SDK
   const upyun = new Upyun({
@@ -338,6 +349,8 @@
     // 页面所需数据均需在这里声明，用于模板数据绑定
     data = {
       systemInfo: {},
+      showTooltip: false,
+      tooltipText: '返回首页或分享给好友',
       openid: null,
       isUserInfoShow: false,
       extendPanelHeight: 0,
@@ -377,12 +390,13 @@
           {name: '鞭炮', index: 26},
           {name: '阳光', index: 27},
           {name: '啤酒', index: 28},
-          {name: '色眯眯', index: 29},
+          {name: '心动', index: 29},
           {name: '亲亲', index: 30},
           {name: '嘴唇', index: 31},
           {name: '玫瑰', index: 32},
           {name: '凋谢', index: 33},
-          {name: '秀儿', index: 34}
+          {name: '秀儿', index: 34},
+          {name: 'delete', index: 'delete'}
         ]
       ],
       facesKey: {
@@ -415,7 +429,7 @@
         '[鞭炮]': 26,
         '[阳光]': 27,
         '[啤酒]': 28,
-        '[色眯眯]': 29,
+        '[心动]': 29,
         '[亲亲]': 30,
         '[嘴唇]': 31,
         '[玫瑰]': 32,
@@ -449,7 +463,11 @@
       // 向输入框中添加表情符号
       addFace (e) {
         let faceName = e.currentTarget.dataset.name
-        this.inputContent += faceName
+        if (faceName === '[delete]') {
+          this.inputContent = this.handleDel()
+        } else {
+          this.inputContent += faceName
+        }
         this.$apply()
       },
       // 从本地相册选择图片或使用相机拍照
@@ -484,7 +502,7 @@
           this.extendPanelHeight = 0
         } else if (value === 'face') {
           this.extendIsShow = value
-          this.extendPanelHeight = 340
+          this.extendPanelHeight = 440
         } else if (value === 'more') {
           this.extendIsShow = value
           this.extendPanelHeight = 210
@@ -516,9 +534,8 @@
         console.log('失去焦点')
       },
       // 发送消息
-      sendMessage (e) {
-        console.log('发送消息：', e)
-        const msg = e.detail.value
+      sendMessage () {
+        const msg = this.inputContent
         if (!msg) {
           return
         }
@@ -543,7 +560,22 @@
     }
     // 声明页面中将要使用到的组件，或声明组件中所引用的子组件
     components = {
-      getuserinfo: GetUserInfo
+      getuserinfo: GetUserInfo,
+      tooltip: Tooltip
+    }
+    handleDel () {
+      let result = ''
+      let str = this.inputContent
+      let strArr = str.match(/\[[^\[\]]*\]/g)
+      let strLen = str.length
+      // 内容中存在表情并且最后一位是表情
+      if (strArr && strArr[strArr.length-1] === str.substr(strLen - 4, strLen)) {
+        result = str.substr(0, strLen - 4)
+      } else {
+        // 不存在表情直接删除最后一个字符
+        result = str.substr(0, strLen - 1)
+      }
+      return result
     }
     // 上传图片到又拍云
     uploadPicture (picture, pictureInfo) {
@@ -788,6 +820,7 @@
     onLoad (options) {
       console.log('options:', options)
       if (options.roomId) {
+        this.showTooltip = true
         this.roomId = options.roomId
         this.getStroageOpenid()
       } else {

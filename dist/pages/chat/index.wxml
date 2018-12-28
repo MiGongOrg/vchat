@@ -1,5 +1,12 @@
 
   <view class="page-wrap">
+    
+  <view class="tooltip"  wx:if="{{$tooltip$show}}" bindtap="$tooltip$close">
+    <view class="tooltip-inner">
+      <text>{{$tooltip$text}}</text>
+      <icon type="cancel" size="14" color="{{$tooltip$color}}"/>
+    </view>
+  </view>
 
     <scroll-view class="chat-container" scroll-y scroll-into-view="{{lastMessageId}}" scroll-top="9999999999" bindtap="handleChatContainer">
       <view  wx:for="{{messages}}" wx:for-item="message" wx:key="id" id="{{message.id}}" wx:for-index="index" class="message {{message.type}}">
@@ -71,6 +78,9 @@
                 </swiper-item>
               </block>
             </swiper>
+            <view class="extend-faces-send">
+              <i-button  bind:click="sendMessage" type="primary" long="true">发送</i-button>
+            </view>
           </view>
         </view>
       </view>
